@@ -46,7 +46,7 @@ class Tetris:
         self.column = 10
         self.blockSize = 30
 
-        self.board = deque([[0 for _ in range(self.column)] for _ in range(self.row)])
+        self.board = [[0 for _ in range(self.column)] for _ in range(self.row)]
 
         self.blockPos = [(self.column // 2)-3, 0]
         shape_index = random.randrange(0, len(self.shapes))
@@ -77,7 +77,7 @@ class Tetris:
         self.blockPos = [(self.column // 2)-3, 0]
 
         if self.__checkShapeCollision():
-            self.board = deque([[0 for _ in range(self.column)] for _ in range(self.row)])
+            self.board = [[0 for _ in range(self.column)] for _ in range(self.row)]
         else:
             self.__checkForRowsFill()
     
@@ -179,19 +179,10 @@ class Tetris:
             if _match: to_remove.append(i)
         
         if len(to_remove):
-            backup = []
-
-            for i in range(to_remove[0]+len(to_remove), self.row):
-                backup.append(self.board.pop())
+            for i in to_remove[::-1]:
+                del self.board[i]
             
-            for i in range(len(to_remove)):
-                self.board.pop()
-            
-            for i in range(len(to_remove)):
-                self.board.appendleft([0] * self.column)
-            
-            while backup:
-                self.board.append(backup.pop())
+            self.board = [[0] * self.column for _ in range(len(to_remove))] + self.board
 
     def render(self):
         self.__drawBoard()
