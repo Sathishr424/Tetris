@@ -1,9 +1,6 @@
 import pygame
-import os
 import random
 import time
-import threading
-from math import ceil
 import colors
 from collections import deque
 
