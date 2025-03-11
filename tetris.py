@@ -6,7 +6,7 @@ from collections import deque
 
 pygame.init()
 
-h_display = 400
+h_display = 450
 v_display = 601
 
 screen = pygame.display.set_mode((h_display, v_display))
@@ -33,12 +33,12 @@ shape_colors = [
 class Tetris:
     def __init__(self):
         self.shapes = [
-            [8, 14, 20, 26],  # I
-            [8, 14, 20, 21],  # L
-            [14, 15, 20, 21], # O
-            [14, 15, 19, 20], # S
+            [9, 15, 21, 27],  # I
+            [9, 15, 21, 22],  # L
+            [15, 16, 21, 22], # O
+            [15, 16, 20, 21], # S
             [14, 15, 21, 22], # Z
-            [8, 14, 20, 19],  # J
+            [9, 15, 21, 20],  # J
             [14, 15, 16, 21], # T
         ]
 
@@ -50,12 +50,16 @@ class Tetris:
 
         self.blockPos = [(self.column // 2)-3, 0]
         shape_index = random.randrange(0, len(self.shapes))
+        next_shape_index = random.randrange(0, len(self.shapes))
 
         self.currentShape = self.shapes[shape_index]
+        self.nextShape = self.shapes[next_shape_index]
         self.currentShapeColor = shape_index
+        self.nextShapeColor = next_shape_index
 
         self.delay = 500 # in ms
         self.start_time = time.time()
+        self.started_playing = self.start_time
     
     def __addTheShapeIntoBoard(self):
         for i in range(4):
@@ -70,9 +74,12 @@ class Tetris:
     
     def __initiateNewBlock(self):
         shape_index = random.randrange(0, len(self.shapes))
+
+        self.currentShape = self.nextShape
+        self.currentShapeColor = self.nextShapeColor
         
-        self.currentShape = self.shapes[shape_index]
-        self.currentShapeColor = shape_index
+        self.nextShape = self.shapes[shape_index]
+        self.nextShapeColor = shape_index
 
         self.blockPos = [(self.column // 2)-3, 0]
 
@@ -183,11 +190,46 @@ class Tetris:
                 del self.board[i]
             
             self.board = [[0] * self.column for _ in range(len(to_remove))] + self.board
+    
+    def __addPadding(self, st):
+        st = str(st)
+        if len(st) == 1: return '0' + st
+        return st
+    
+    def __secondsToReadableTime(self, seconds):
+        minutes = seconds // 60
+        seconds = seconds % 60
+
+        return f'{self.__addPadding(minutes)}:{self.__addPadding(seconds)}'
+
+    def __drawText(self, text, x, y, color=colors.white):
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect(center=(x, y))
+
+        screen.blit(text_surface, text_rect)
+
+    def __drawNextBlock(self):
+        self.__drawText('Next block', h_display-75, 190)
+
+        for i in range(4):
+            pos = self.nextShape[i]
+
+            y = pos // 6
+            x = pos % 6
+
+            self.__drawBlock((x+9)*self.blockSize, (y+6)*self.blockSize, shape_colors[self.nextShapeColor])
 
     def render(self):
         self.__drawBoard()
         self.__drawGhost()
         self.__drawShape()
+
+        left = h_display-75
+
+        self.__drawText('Play time', left, 100)
+        self.__drawText(self.__secondsToReadableTime(int(time.time() - self.started_playing)), left, 125)
+
+        self.__drawNextBlock()
     
     def run(self):
         self.render()
