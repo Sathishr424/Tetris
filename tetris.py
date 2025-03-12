@@ -60,6 +60,10 @@ class Tetris:
         self.delay = 500 # in ms
         self.start_time = time.time()
         self.started_playing = self.start_time
+
+        self.blocks_cleared = 0
+        self.score = 0
+        self.level = 0
     
     def __addTheShapeIntoBoard(self):
         for i in range(4):
@@ -85,6 +89,9 @@ class Tetris:
 
         if self.__checkShapeCollision():
             self.board = [[0 for _ in range(self.column)] for _ in range(self.row)]
+            self.level = 0
+            self.blocks_cleared = 0
+            self.score = 0
         else:
             self.__checkForRowsFill()
     
@@ -190,6 +197,21 @@ class Tetris:
                 del self.board[i]
             
             self.board = [[0] * self.column for _ in range(len(to_remove))] + self.board
+
+            self.__calculateScore(len(to_remove))
+        
+    def __calculateScore(self, cleared):
+        prev = self.blocks_cleared
+        self.blocks_cleared += cleared
+        
+        if cleared == 1: points = 100
+        elif cleared == 2: points = 300
+        elif cleared == 3: points = 500
+        else: points = 800
+
+        self.level += (prev % 10) + cleared >= 10
+
+        self.score += points * (self.level + 1)
     
     def __addPadding(self, st):
         st = str(st)
@@ -208,8 +230,8 @@ class Tetris:
 
         screen.blit(text_surface, text_rect)
 
-    def __drawNextBlock(self):
-        self.__drawText('Next block', h_display-75, 190)
+    def __drawNextBlock(self, top):
+        self.__drawText('Next block', h_display-75, top)
 
         for i in range(4):
             pos = self.nextShape[i]
@@ -217,7 +239,7 @@ class Tetris:
             y = pos // 6
             x = pos % 6
 
-            self.__drawBlock((x+9)*self.blockSize, (y+6)*self.blockSize, shape_colors[self.nextShapeColor])
+            self.__drawBlock((x+9)*self.blockSize, (y+1)*self.blockSize, shape_colors[self.nextShapeColor])
 
     def render(self):
         self.__drawBoard()
@@ -226,10 +248,29 @@ class Tetris:
 
         left = h_display-75
 
-        self.__drawText('Play time', left, 100)
-        self.__drawText(self.__secondsToReadableTime(int(time.time() - self.started_playing)), left, 125)
+        column = 40
+        self.__drawNextBlock(column)
+        column += 160
 
-        self.__drawNextBlock()
+        self.__drawText('Blocks cleared', left, column)
+        column += 25
+        self.__drawText(self.__addPadding(self.blocks_cleared), left, column)
+        column += 30
+        # Score
+        self.__drawText('Score', left, column)
+        column += 25
+        self.__drawText(self.__addPadding(self.score), left, column)
+        column += 30
+        # Level
+        self.__drawText('Level', left, column)
+        column += 25
+        self.__drawText(self.__addPadding(self.level), left, column)
+        column += 30
+
+        self.__drawText('Play time', left, column)
+        column += 25
+        self.__drawText(self.__secondsToReadableTime(int(time.time() - self.started_playing)), left, column)
+        column += 30
     
     def run(self):
         self.render()
